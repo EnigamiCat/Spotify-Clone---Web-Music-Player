@@ -103,7 +103,7 @@ async function main() {
         }
         else {
             currentSong.pause()
-            play.src = "play.svg"
+            play.src = "images/play.svg"
 
         }
 
