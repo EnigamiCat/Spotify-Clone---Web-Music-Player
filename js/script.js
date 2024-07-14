@@ -65,7 +65,7 @@ async function getSongs(folder) {
         })
 
     })
-  
+  return songs
 }
 
 const playMusic = (track, pause = false) => {
@@ -73,7 +73,7 @@ const playMusic = (track, pause = false) => {
     currentSong.src  = `/${currFolder}/`+ track
     if (!pause) {
         currentSong.play()
-        console.log(track)
+      
         play.src = "pause.svg"
     }
 
@@ -82,10 +82,47 @@ const playMusic = (track, pause = false) => {
 }
 
 async function displayAlbums(){
-      let a = await fetch(`http://127.0.0.1:3000/songs/}`)
-      let response = a.text()
+      let a = await fetch(`http://127.0.0.1:3000/songs/`)
+      let response = await a.text();
       let div = document.createElement("div")
-      div.innerHTML = response
+      div.innerHTML = response;
+      console.log(div)
+
+      let anchors  = div.getElementsByTagName("a")
+      let cardContainer = document.querySelector(".cardContainer")
+      let array = Array.from(anchors)
+      
+      for (let index = 0; index < array.length; index++) {
+        const e = array[index];
+        
+      
+
+      
+        if(e.href.includes("/songs")){
+            let folder = e.href.split("/").slice(-2)[0]
+            //get metadata of the folder
+            let a = await fetch(`http://127.0.0.1:3000/songs/${folder}/info.json`)
+            let response = await a.json()
+            console.log(response)
+            cardContainer.innerHTML = cardContainer.innerHTML + `  <div data-folder="${folder}" class="card">
+                        <div style="padding: 0;" class="play">
+                            <img src="images/greenPlay.svg" alt="">
+                        </div>
+                        <img src="/songs/${folder}/cover.jpg" alt="">
+                        <h2>${response.title}</h2>
+                        <p>${response.description}</p>
+                    </div>
+`
+
+        }
+      }
+       //loading the pl when card is clicked
+      Array.from(document.getElementsByClassName("card")).forEach(e=>{
+        e.addEventListener("click",async item=>{
+            songs = await getSongs(`songs/${item.currentTarget.dataset.folder}`)
+            playMusic(songs[0],)
+        })
+    })
 }
 
 async function main() {
@@ -132,8 +169,8 @@ async function main() {
     })
 
     next.addEventListener("click",()=>{
-                console.log(currentSong)
-                console.log((currentSong.src.split("/").slice(-1))[0])
+               // console.log(currentSong)
+            //    console.log((currentSong.src.split("/").slice(-1))[0])
                 let index = songs.indexOf(currentSong.src.split("/").slice(-1)[0])
                 console.log(index)
 
@@ -144,9 +181,9 @@ async function main() {
 
     prev.addEventListener("click",()=>{
         
-        console.log((currentSong.src.split("/").slice(-1))[0])
+      //  console.log((currentSong.src.split("/").slice(-1))[0])
         let index = songs.indexOf(currentSong.src.split("/").slice(-1)[0])
-        console.log(index)
+      //  console.log(index)
 
         if(index-1 >=0){
             playMusic(songs[index-1])
@@ -159,10 +196,20 @@ async function main() {
         currentSong.volume = parseInt(e.target.value)/100
     })
 
-   Array.from(document.getElementsByClassName("card")).forEach(e=>{
-        e.addEventListener("click",async item=>{
-            songs = await getSongs(`songs/${item.currentTarget.dataset.folder}`)
-        })
+   
+    document.querySelector(".volume >img").addEventListener("click",e=>{
+        console.log(e.target.src)
+        if(e.target.src.includes("volume.svg")){
+            e.target.src = e.target.src.replace("volume.svg","mute.svg")
+            currentSong.volume = 0
+            document.querySelector(".range").getElementsByTagName("input")[0].value = 0 
+        }
+        else {
+            e.target.src = e.target.src.replace("mute.svg","volume.svg")
+            document.querySelector(".range").getElementsByTagName("input")[0].value = 10 
+            currentSong.volume = 0.1
+        }
+
     })
 }
 
